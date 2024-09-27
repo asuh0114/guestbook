@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>방명록</title>
+    <style>
+        /* 기본적인 페이지 레이아웃 및 스타일 */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* 제목 스타일 */
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin: 20px 0;
+            color: #007BFF;
+        }
+        /* 폼 레이아웃과 스타일 */
+        form {
+            text-align: center;
+            margin: 40px auto; /* 가운데 정렬 및 여백 */
+            width: 90%;
+            max-width: 500px; /* 폼의 최대 너비 설정 */
+            background-color: #f9f9f9; /* 폼 배경색 */
+            padding: 25px; /* 패딩 추가 */
+            border-radius: 12px; /* 모서리 둥글게 */
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+        }
+        /* 텍스트 입력창 스타일 */
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            margin-bottom: 10px;
+            font-size: 1em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        /* 문자 개수 표시 */
+        #charCount {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        /* 버튼 스타일 */
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.08); /* hover 시 확대 효과 */
+        }
+        /* 방명록 항목 영역 스타일 */
+        #guestbook-entries {
+            width: 90%;
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        /* 각 방명록 항목 스타일 */
+        .entry {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+            opacity: 0;
+            transform: translateY(30px); /* 애니메이션 초기 상태 */
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out; /* 애니메이션 */
+            position: relative;
+        }
+        .entry.visible {
+            opacity: 1;
+            transform: translateY(0); /* 항목이 화면에 나타남 */
+        }
+        .entry:last-child {
+            border-bottom: none; /* 마지막 항목에는 경계선을 없앰 */
+        }
+        /* 작성자 정보 스타일 */
+        .entry-author {
+            font-weight: bold;
+            color: #007BFF;
+            font-size: 1.2em;
+        }
+        /* 방명록 내용 스타일 */
+        .entry-content {
+            margin-top: 10px;
+            font-size: 1em;
+            line-height: 1.5;
+            position: relative;
+        }
+        /* 더보기/접기 버튼 스타일 */
+        .toggle-button {
+            color: #007BFF;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 10px;
+            display: block;
+            transition: color 0.3s;
+        }
+        .toggle-button:hover {
+            color: #0056b3;
+        }
+        /* 삭제 버튼 스타일 */
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .delete-button:hover {
+            background-color: #cc0000;
+            transform: scale(1.05); /* hover 시 확대 효과 */
+        }
+        /* 페이지네이션 스타일 */
+        .pagination {
+            display: flex;
+            justify-content: center; /* 페이지네이션 중앙 정렬 */
+            margin: 30px 0; /* 여백 추가 */
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 10px 15px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .pagination button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05); /* hover 시 확대 효과 */
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed; /* 비활성화된 버튼에 대한 스타일 */
+        }
+    </style>
+</head>
+<body>
+    <h1>방명록</h1>
+    <form id="guestbook-form">
+        <textarea id="entry" rows="4" placeholder="여기에 글을 작성하세요..."></textarea><br>
+        <div id="charCount">0 characters</div> <!-- 문자 개수 표시 -->
+        <button type="submit">제출</button> <!-- 제출 버튼 -->
+    </form>
+    <div id="guestbook-entries"></div> <!-- 방명록 항목이 표시되는 영역 -->
+    <div class="pagination">
+        <button id="prevPage" disabled>이전</button> <!-- 이전 페이지 버튼 -->
+        <span id="pageInfo">1</span> <!-- 현재 페이지 표시 -->
+        <button id="nextPage">다음</button> <!-- 다음 페이지 버튼 -->
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const entriesPerPage = 5; // 한 페이지에 표시할 항목 수
+
+        // 폼 제출 시 서버에 새로운 항목을 POST 요청으로 보냄
+        document.getElementById('guestbook-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // 기본 폼 제출 동작 방지
+            const entry = document.getElementById('entry').value; // 입력된 텍스트 가져오기
+            if (entry) {
+                fetch('/guestbook', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ entry: entry }) // 서버로 보낼 데이터
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Entry added successfully!') {
+                        document.getElementById('entry').value = ''; // 입력 필드 초기화
+                        document.getElementById('charCount').textContent = '0 characters'; // 문자 개수 초기화
+                        loadEntries(currentPage); // 현재 페이지 다시 로드
+                    } else {
+                        alert(data.message); // 실패 메시지 표시
+                    }
+                });
+            }
+        });
+
+        // 텍스트 입력 시 문자 개수 업데이트
+        document.getElementById('entry').addEventListener('input', function() {
+            const currentLength = this.value.length;
+            document.getElementById('charCount').textContent = `${currentLength} characters`;
+        });
+
+        // 이전 페이지 버튼 클릭 시
+        document.getElementById('prevPage').addEventListener('click', function() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadEntries(currentPage); // 이전 페이지 로드
+            }
+        });
+
+        // 다음 페이지 버튼 클릭 시
+        document.getElementById('nextPage').addEventListener('click', function() {
+            currentPage++;
+            loadEntries(currentPage); // 다음 페이지 로드
+        });
+
+        // IP 주소의 마지막 부분을 마스킹
+        function maskIp(ip) {
+            const parts = ip.split('.');
+            if (parts.length === 4) {
+                parts[3] = '***'; // 마지막 부분을 ***로 대체
+            }
+            return parts.join('.');
+        }
+
+        // 더보기/접기 버튼을 생성하는 함수
+        function createToggleButtons(contentDiv, fullContent) {
+            const toggleButton = document.createElement('span');
+            toggleButton.className = 'toggle-button';
+            toggleButton.textContent = '더보기'; // 기본은 '더보기'
+            toggleButton.addEventListener('click', function() {
+                if (contentDiv.dataset.expanded === "true") {
+                    contentDiv.textContent = fullContent.substring(0, 500) + '...';
+                    toggleButton.textContent = '더보기';
+                    contentDiv.dataset.expanded = "false"; // 접기 상태
+                } else {
+                    contentDiv.textContent = fullContent;
+                    toggleButton.textContent = '접기';
+                    contentDiv.dataset.expanded = "true"; // 펼침 상태
+                }
+                contentDiv.appendChild(toggleButton);
+            });
+            return toggleButton;
+        }
+
+        // 항목 삭제 버튼 생성 함수
+        function createDeleteButton(entryDiv, entryId) {
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = '삭제'; // 삭제 버튼 텍스트
+            deleteButton.addEventListener('click', function() {
+                fetch(`/guestbook/${entryId}`, {
+                    method: 'DELETE' // 삭제 요청
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'Entry deleted successfully!') {
+                        loadEntries(currentPage); // 삭제 후 현재 페이지 새로고침
+                    } else {
+                        alert(data.message); // 실패 시 메시지 표시
+                    }
+                });
+            });
+            return deleteButton;
+        }
+
+        // 서버에서 방명록 항목 로드 함수
+        function loadEntries(page) {
+            fetch(`/guestbook?page=${page}&limit=${entriesPerPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    const entries = data.entries;
+                    const totalEntries = data.total; // 전체 항목 수
+                    const entriesDiv = document.getElementById('guestbook-entries');
+                    entriesDiv.innerHTML = ''; // 기존 항목 지우기
+                    entries.forEach((entry, index) => {
+                        const entryDiv = document.createElement('div');
+                        entryDiv.className = 'entry';
+                        
+                        const authorDiv = document.createElement('div');
+                        authorDiv.className = 'entry-author';
+                        authorDiv.textContent = `익명 (${maskIp(entry.ip)})`; // 작성자의 IP 마스킹
+
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'entry-content';
+                        const fullContent = entry.content;
+                        contentDiv.dataset.expanded = "false"; // 기본 접힘 상태
+                        contentDiv.textContent = fullContent.length > 500 ? fullContent.substring(0, 500) + '...' : fullContent;
+
+                        if (fullContent.length > 500) {
+                            const toggleButton = createToggleButtons(contentDiv, fullContent); // 더보기 버튼 추가
+                            contentDiv.appendChild(toggleButton);
+                        }
+
+                        const deleteButton = createDeleteButton(entryDiv, entry.id); // 삭제 버튼 추가
+                        
+                        entryDiv.appendChild(authorDiv);
+                        entryDiv.appendChild(contentDiv);
+                        entryDiv.appendChild(deleteButton);
+                        entriesDiv.appendChild(entryDiv);
+
+                        setTimeout(() => {
+                            entryDiv.classList.add('visible'); // 애니메이션 적용
+                        }, index * 100); // 항목이 하나씩 차례대로 나타남
+                    });
+
+                    // 페이지 정보 및 버튼 상태 업데이트
+                    document.getElementById('pageInfo').textContent = page;
+                    document.getElementById('prevPage').disabled = page === 1;
+                    document.getElementById('nextPage').disabled = page * entriesPerPage >= totalEntries;
+                });
+        }
+
+        loadEntries(currentPage); // 페이지 로드 시 초기 항목 로드
+    </script>
+</body>
+</html>
